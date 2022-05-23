@@ -500,6 +500,7 @@ func (w *Watcher) retrieveFileList() map[string]os.FileInfo {
 					if name == err.(*os.PathError).Path {
 						// w.Error <- ErrWatchedFileDeleted
 						// w.RemoveRecursive(name) 文件不存在，不删除
+						list, _ = w.copyOldFile(name)
 						w.Error <- errors.New(fmt.Sprintf("%v, path: %v", ErrWatchedFileDeleted.Error(), name))
 					}
 					w.mu.Lock()
@@ -515,6 +516,7 @@ func (w *Watcher) retrieveFileList() map[string]os.FileInfo {
 					if name == err.(*os.PathError).Path {
 						// w.Error <- ErrWatchedFileDeleted
 						// w.Remove(name)
+						list, _ = w.copyOldFile(name)
 						w.Error <- errors.New(fmt.Sprintf("%v, path: %v", ErrWatchedFileDeleted.Error(), name))
 					}
 					w.mu.Lock()
@@ -714,4 +716,18 @@ func (w *Watcher) Close() {
 	w.mu.Unlock()
 	// Send a close signal to the Start method.
 	w.close <- struct{}{}
+}
+
+func (w *Watcher) copyOldFile(name string) (map[string]os.FileInfo, error) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+
+	fileList := make(map[string]os.FileInfo)
+	for k, v := range w.files {
+		if strings.HasPrefix(k, name) {
+			fileList[k] = v
+		}
+	}
+
+	return fileList, nil
 }
