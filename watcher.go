@@ -498,8 +498,9 @@ func (w *Watcher) retrieveFileList() map[string]os.FileInfo {
 				if os.IsNotExist(err) {
 					w.mu.Unlock()
 					if name == err.(*os.PathError).Path {
-						w.Error <- ErrWatchedFileDeleted
-						w.RemoveRecursive(name)
+						// w.Error <- ErrWatchedFileDeleted
+						// w.RemoveRecursive(name) 文件不存在，不删除
+						w.Error <- errors.New(fmt.Sprintf("%v, path: %v", ErrWatchedFileDeleted.Error(), name))
 					}
 					w.mu.Lock()
 				} else {
@@ -512,8 +513,9 @@ func (w *Watcher) retrieveFileList() map[string]os.FileInfo {
 				if os.IsNotExist(err) {
 					w.mu.Unlock()
 					if name == err.(*os.PathError).Path {
-						w.Error <- ErrWatchedFileDeleted
-						w.Remove(name)
+						// w.Error <- ErrWatchedFileDeleted
+						// w.Remove(name)
+						w.Error <- errors.New(fmt.Sprintf("%v, path: %v", ErrWatchedFileDeleted.Error(), name))
 					}
 					w.mu.Lock()
 				} else {
